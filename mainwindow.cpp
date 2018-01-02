@@ -12,7 +12,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    //setWindowFlags(Qt::WindowStaysOnTopHint);
 
     setWindowTitle(QString("TaskTimer version 1  Build: ") + __DATE__ + " " + __TIME__ );
     timerEvent(0);
@@ -32,11 +31,48 @@ MainWindow::MainWindow(QWidget *parent) :
         }
         file.close();
     }
+
+    minimalInit();
 }
 
 MainWindow::~MainWindow()
 {
+    dialog->deleteLater();
+    if(inProgress) on_pbStart_clicked();
     delete ui;
+}
+
+void MainWindow::minimalInit()
+{
+    // Минималистический диалог
+    dialog = new Dialog();
+    dialog->setGeometry(x(),0,0,0);
+    auto layout = new QHBoxLayout;
+    layout->setMargin(0);
+
+    auto text = new QLabel(ui->labelTime->text());
+    text->setFont(QFont(ui->labelTime->font()));
+    connect(this, MainWindow::onTimer, [=](QString t){ text->setText(t); });
+    layout->addWidget(text);
+
+    auto stop = new QPushButton(inProgress ? "Stop" : "Start");
+    connect(stop, QPushButton::clicked, [=](){
+        ui->pbStart->clicked();
+        stop->setText(inProgress ? "Start" : "Stop");
+    });
+    layout->addWidget(stop);
+
+    auto exit = new QPushButton("X");
+    connect(exit, QPushButton::clicked, [=](){
+        dialog->setVisible(false);
+        setVisible(true);
+    });
+    layout->addWidget(exit);
+
+    stop->setMaximumWidth(40);
+    exit->setMaximumWidth(20);
+
+    dialog->setLayout(layout);
 }
 
 void MainWindow::on_pbStart_clicked()
@@ -116,40 +152,7 @@ void MainWindow::on_cbTaskName_currentTextChanged(const QString &arg)
 
 void MainWindow::on_pbMinimal_clicked()
 {
+    dialog->setVisible(true);
     setVisible(false);
-
-    // Минималистический диалог
-    auto dialog = new Dialog();
-    dialog->setGeometry(x(),0,0,0);
-    auto layout = new QHBoxLayout;
-    layout->setMargin(0);
-
-    auto text = new QLabel(ui->labelTime->text());
-    text->setFont(QFont(ui->labelTime->font()));
-    auto connection_text = connect(this, MainWindow::onTimer, [=](QString t){ text->setText(t); });
-    layout->addWidget(text);
-
-    auto stop = new QPushButton(inProgress ? "Stop" : "Start");
-    auto connection_stop = connect(stop, QPushButton::clicked, [=](){
-        ui->pbStart->clicked();
-        stop->setText(inProgress ? "Start" : "Stop");
-    });
-    layout->addWidget(stop);
-
-    auto exit = new QPushButton("X");
-    connect(exit, QPushButton::clicked, [=](){
-        disconnect(connection_text);
-        disconnect(connection_stop);
-        disconnect(exit);
-        dialog->deleteLater();
-        setVisible(true);
-    });
-    layout->addWidget(exit);
-
-    stop->setMaximumWidth(40);
-    exit->setMaximumWidth(20);
-
-    dialog->setLayout(layout);
-    dialog->show();
 }
 

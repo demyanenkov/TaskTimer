@@ -9,6 +9,8 @@ namespace Ui {
     class MainWindow;
 }
 
+class Dialog;
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -31,6 +33,7 @@ private:
     void fileAppend();
     QString timeToString(int time, int color=0);
     void addRow(QDateTime dateTime, int dt, QString taskName);
+    void minimalInit();
 
     Ui::MainWindow *ui;
     bool inProgress = false;
@@ -38,6 +41,7 @@ private:
     int timerId;
 
     QMap<QString,int> map;
+    Dialog *dialog;
 };
 
 #endif // MAINWINDOW_H
