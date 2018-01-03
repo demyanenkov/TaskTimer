@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/">
+        <file>timer.png</file>
+        <file>eject.png</file>
+        <file>pause.png</file>
+        <file>stop.png</file>
+        <file>start.png</file>
+        <file>timer.ico</file>
+    </qresource>
+</RCC>

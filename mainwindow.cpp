@@ -4,6 +4,9 @@
 #include <QDateTime>
 #include <QFile>
 #include <QBoxLayout>
+#include <QSystemTrayIcon>
+#include <QMenu>
+#include <QAction>
 
 #include "dialog.h"
 
@@ -14,6 +17,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     setWindowTitle(QString("TaskTimer version 1  Build: ") + __DATE__ + " " + __TIME__ );
+    setWindowIcon(QIcon(":/timer.png"));
     timerEvent(0);
 
     // Чтение данных
@@ -33,11 +37,30 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
     minimalInit();
+
+    tray.reset(new QSystemTrayIcon);
+    tray->setIcon(QIcon(":/timer.png"));
+    createMenu();
+    tray->show();
+
+    settings.reset(new QSettings("TaskTimer.ini", QSettings::IniFormat, this));
+    if(settings->value("minimal").isValid())
+        if(settings->value("minimal").toBool()) {
+            setVisible(false);
+            dialog->setVisible(true);
+        }
+
+    if(settings->value("minimal_geometry").isValid())
+        dialog->setGeometry(settings->value("minimal_geometry").toRect());
+
+    if(!dialog->isVisible()) show();
 }
 
 MainWindow::~MainWindow()
 {
-    dialog->deleteLater();
+    settings->setValue("minimal", !isVisible());
+    settings->setValue("minimal_geometry", dialog->geometry());
+
     if(inProgress) on_pbStart_clicked();
     delete ui;
 }
@@ -45,34 +68,43 @@ MainWindow::~MainWindow()
 void MainWindow::minimalInit()
 {
     // Минималистический диалог
-    dialog = new Dialog();
+    dialog.reset(new Dialog());
     dialog->setGeometry(x(),0,0,0);
     auto layout = new QHBoxLayout;
     layout->setMargin(0);
 
-    auto text = new QLabel(ui->labelTime->text());
+    auto text = new QLabel(ui->labelTime->text(), dialog.data());
     text->setFont(QFont(ui->labelTime->font()));
     connect(this, MainWindow::onTimer, [=](QString t){ text->setText(t); });
     layout->addWidget(text);
 
-    auto stop = new QPushButton(inProgress ? "Stop" : "Start");
+    auto setIcon = [](bool f)->QIcon { return QIcon(f ? ":/stop.png" : ":/start.png"); };
+
+    auto stop = new QPushButton(setIcon(inProgress), "", this);
     connect(stop, QPushButton::clicked, [=](){
         ui->pbStart->clicked();
-        stop->setText(inProgress ? "Start" : "Stop");
+        stop->setIcon(setIcon(inProgress));
     });
+    stop->setMaximumWidth(30);
     layout->addWidget(stop);
 
-    auto exit = new QPushButton("X");
-    connect(exit, QPushButton::clicked, [=](){
-        dialog->setVisible(false);
-        setVisible(true);
-    });
-    layout->addWidget(exit);
-
-    stop->setMaximumWidth(40);
-    exit->setMaximumWidth(20);
-
+    dialog->setWindowOpacity(0.7);
     dialog->setLayout(layout);
+}
+
+void MainWindow::createMenu()
+{
+    trayMenu.reset(new QMenu(this));
+
+    auto actionShowHide = new QAction (tr("Скрыть\\Развернуть"), this);
+    trayMenu->addAction(actionShowHide);
+    connect(actionShowHide, SIGNAL(triggered(bool)), this, SLOT(on_pbMinimal_clicked()));
+
+    auto actionExit = new QAction (tr("Выход"), this);
+    trayMenu->addAction(actionExit);
+    connect(actionExit, QAction::triggered, [&](){ QCoreApplication::quit(); });
+
+    tray->setContextMenu(trayMenu.data());
 }
 
 void MainWindow::on_pbStart_clicked()
@@ -152,7 +184,8 @@ void MainWindow::on_cbTaskName_currentTextChanged(const QString &arg)
 
 void MainWindow::on_pbMinimal_clicked()
 {
-    dialog->setVisible(true);
-    setVisible(false);
+    bool minimal = dialog->isVisible();
+    dialog->setVisible(!minimal);
+    setVisible(minimal);
 }
 

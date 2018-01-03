@@ -16,3 +16,11 @@ HEADERS += \
 
 FORMS += \
         mainwindow.ui
+
+RESOURCES += \
+    tasktimer.qrc
+
+DISTFILES += \
+    TaskTimer.rc
+
+win32:RC_FILE = TaskTimer.rc

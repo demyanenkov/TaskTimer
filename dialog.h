@@ -10,7 +10,7 @@ class Dialog: public QDialog {
 
 public:
     Dialog(){
-        setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
+        setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint | Qt::Tool);
     }
 
 private:

@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QDateTime>
+#include <QSettings>
 #include <QMap>
 
 namespace Ui {
@@ -10,6 +11,9 @@ namespace Ui {
 }
 
 class Dialog;
+class QSystemTrayIcon;
+class QMenu;
+class QSettings;
 
 class MainWindow : public QMainWindow
 {
@@ -34,6 +38,7 @@ private:
     QString timeToString(int time, int color=0);
     void addRow(QDateTime dateTime, int dt, QString taskName);
     void minimalInit();
+    void createMenu();
 
     Ui::MainWindow *ui;
     bool inProgress = false;
@@ -41,7 +46,10 @@ private:
     int timerId;
 
     QMap<QString,int> map;
-    Dialog *dialog;
+    QScopedPointer<Dialog> dialog;
+    QScopedPointer<QSystemTrayIcon> tray;
+    QScopedPointer<QMenu> trayMenu;
+    QScopedPointer<QSettings> settings;
 };
 
 #endif // MAINWINDOW_H
