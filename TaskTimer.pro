@@ -21,6 +21,7 @@ RESOURCES += \
     tasktimer.qrc
 
 DISTFILES += \
-    TaskTimer.rc
+    TaskTimer.rc \
+    README.md
 
 win32:RC_FILE = TaskTimer.rc
